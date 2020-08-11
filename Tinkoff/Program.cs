@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml;
+using Microsoft.Extensions.Configuration;
 using Tinkoff.Trading.OpenApi.Models;
 using Tinkoff.Trading.OpenApi.Network;
 
@@ -14,9 +15,16 @@ namespace Tinkoff
         private static Context _context;
         private static Dictionary<DateTime, decimal> _usdRates;
         private static Dictionary<DateTime, decimal> _eurRates;
+        private static IConfiguration _configuration;
 
         static async Task Main(string[] args)
         {
+            _configuration = new ConfigurationBuilder()
+                             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                             .AddEnvironmentVariables()
+                             .AddCommandLine(args)
+                             .Build();
+            
             WriteLine("Setting up the context!");
             SetupContext();
 
@@ -73,7 +81,6 @@ namespace Tinkoff
             return rate;
         }
 
-
         private static decimal CalculatePositionBalance(Portfolio.Position position, decimal usdRate, decimal eurRate)
         {
             var balance = position.Balance * position.AveragePositionPrice.Value + position.ExpectedYield.Value;
@@ -91,35 +98,38 @@ namespace Tinkoff
             }
         }
 
-        private static void CalculateTotalCompoundInterest(List<(decimal sum, int days)> tuples, decimal portfolioFund)
+        private static void CalculateTotalCompoundInterest(IReadOnlyCollection<(decimal sum, int days)> tuples, decimal portfolioFund)
         {
-            var originalFund = tuples.Last().sum;
-            var inaccuracy = (decimal)0.01 * portfolioFund;
+            //var originalFund = tuples.Last().sum;
+            //var inaccuracy = (decimal)0.01 * portfolioFund;
             //double yearlyRate = 21.0;
-            double dailyRate = 0.05; //yearlyRate / 365.0;
-            decimal profit = 0;
-            int i = 0;
-            var calculatedFund = originalFund + profit;
-            while (i < 100 && Math.Abs(portfolioFund - calculatedFund) > inaccuracy)
-            {
-                if (portfolioFund > calculatedFund)
-                {
-                    dailyRate += 0.001;
-                }
-                else
-                {
-                    dailyRate -= 0.001;
-                }
-
-                profit = CalculateProfit(tuples, profit, dailyRate);
-                calculatedFund = originalFund + profit;
-                WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
-                i++;
-            }
+            double dailyRate = 0.07; //yearlyRate / 365.0;
+            // decimal profit = 0;
+            // int i = 0;
+            var calculatedFund = CalculateProfit(tuples, dailyRate);
+            WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
+            //var calculatedFund = originalFund + profit;
+            // while (i < 100 && Math.Abs(portfolioFund - calculatedFund) > inaccuracy)
+            // {
+            //     if (portfolioFund > calculatedFund)
+            //     {
+            //         dailyRate += 0.0001;
+            //     }
+            //     else
+            //     {
+            //         dailyRate -= 0.0001;
+            //     }
+            //
+            //     profit = CalculateProfit(tuples, profit, dailyRate);
+            //     calculatedFund = originalFund + profit;
+            //     WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
+            //     i++;
+            // }
         }
 
-        private static decimal CalculateProfit(List<(decimal sum, int days)> tuples, decimal currentSum, double dailyRate)
+        private static decimal CalculateProfit(IEnumerable<(decimal sum, int days)> tuples, double dailyRate)
         {
+            decimal currentSum = 0;
             foreach (var (sum, days) in tuples)
             {
                 currentSum += CalculateProfitByCompoundInterest(sum, days, dailyRate);
@@ -198,7 +208,7 @@ namespace Tinkoff
 
         private static void SetupContext()
         {
-            const string token = "";
+            var token = _configuration["Token"];  
             var connection = ConnectionFactory.GetConnection(token);
             _context = connection.Context;
         }
