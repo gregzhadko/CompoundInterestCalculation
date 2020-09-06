@@ -23,7 +23,7 @@ namespace Tinkoff
 
         public void Calculate()
         {
-            var currentBalance = CalculateBalance(_portfolio);
+            var currentBalance = CalculateCurrentBalance(_portfolio);
             WriteLine($"Current Balance:{currentBalance}");
 
             _operations = FilterAndConvertOperations(_operations);
@@ -49,19 +49,11 @@ namespace Tinkoff
             CalculateTotalCompoundInterest(tuples, currentBalance);
         }
         
-        private static decimal CalculateBalance(Portfolio portfolio)
+        private decimal CalculateCurrentBalance(Portfolio portfolio)
         {
-            var usdRate = CalculateBalance(portfolio.Positions, "BBG0013HGFT4");
-            var eurRate = CalculateBalance(portfolio.Positions, "BBG0013HJJ31");
+            var usdRate = _usdRates[DateTime.Now.Date];
+            var eurRate = _eurRates[DateTime.Now.Date];
             return portfolio.Positions.Sum(position => CalculatePositionBalance(position, usdRate, eurRate));
-        }
-
-        private static decimal CalculateBalance(IReadOnlyCollection<Portfolio.Position> positions, string figi)
-        {
-            var currency = positions.First(p => p.Figi == figi);
-            var balance = currency.Balance * currency.AveragePositionPrice.Value + currency.ExpectedYield.Value;
-            var rate = balance / currency.Balance;
-            return rate;
         }
 
         private static decimal CalculatePositionBalance(Portfolio.Position position, decimal usdRate, decimal eurRate)
@@ -77,7 +69,7 @@ namespace Tinkoff
                 case Currency.Rub:
                     return balance;
                 default:
-                    throw new Exception("Wow, you have stock in unusual currency");
+                    throw new Exception("Wow, you have stocks in unusual currency");
             }
         }
 
@@ -179,6 +171,12 @@ namespace Tinkoff
             return convertedOperations;
         }
 
+        /// <summary>
+        /// Converts operation from the existing currency to RUB based on the currency dictionary
+        /// </summary>
+        /// <param name="operation"></param>
+        /// <param name="dictionary"></param>
+        /// <returns></returns>
         public static MutableOperation ConvertOperationToRub(MutableOperation operation, IReadOnlyDictionary<DateTime, decimal> dictionary)
         {
             var payment = dictionary[operation.Date.Date] * operation.Payment;
