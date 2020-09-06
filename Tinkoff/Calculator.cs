@@ -166,10 +166,10 @@ namespace Tinkoff
                 switch (operations[i].Currency)
                 {
                     case Currency.Usd:
-                        operations[i] = ConvertOperationToRub(operations[i], _usdRates, operations[i].Date);
+                        operations[i] = (Operation)ConvertOperationToRub((MutableOperation)operations[i], _usdRates);
                         break;
                     case Currency.Eur:
-                        operations[i] = ConvertOperationToRub(operations[i], _eurRates, operations[i].Date);
+                        operations[i] = (Operation)ConvertOperationToRub((MutableOperation)operations[i], _eurRates);
                         break;
                 }
 
@@ -179,16 +179,12 @@ namespace Tinkoff
             return convertedOperations;
         }
 
-        private static Operation ConvertOperationToRub(Operation o, IReadOnlyDictionary<DateTime, decimal> dictionary, DateTime date)
+        public static MutableOperation ConvertOperationToRub(MutableOperation operation, IReadOnlyDictionary<DateTime, decimal> dictionary)
         {
-            var payment = dictionary[date.Date] * o.Payment;
-            var operation = new Operation(o.Id, o.Status, o.Trades, o.Commission, Currency.Rub, payment, o.Price, o.Quantity, o.Figi, o.InstrumentType, o.IsMarginCall, o.Date, o.OperationType);
+            var payment = dictionary[operation.Date.Date] * operation.Payment;
+            operation.Currency = Currency.Rub;
+            operation.Payment = payment;
             return operation;
-        }
-
-        private static string FormatOperation(Operation operation)
-        {
-            return $"Date: {operation.Date:dd.MM.yy}. {operation.Currency}, Payment: {operation.Payment,15} Type: {operation.OperationType}";
         }
     }
 }
