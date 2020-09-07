@@ -23,7 +23,7 @@ namespace Tinkoff
 
         public void Calculate()
         {
-            var currentBalance = CalculateCurrentBalance(_portfolio);
+            var currentBalance = CalculateCurrentBalance();
             WriteLine($"Current Balance:{currentBalance}");
 
             _operations = FilterAndConvertOperations(_operations);
@@ -49,28 +49,24 @@ namespace Tinkoff
             CalculateTotalCompoundInterest(tuples, currentBalance);
         }
         
-        private decimal CalculateCurrentBalance(Portfolio portfolio)
+        public decimal CalculateCurrentBalance()
         {
             var usdRate = _usdRates[DateTime.Now.Date];
             var eurRate = _eurRates[DateTime.Now.Date];
-            return portfolio.Positions.Sum(position => CalculatePositionBalance(position, usdRate, eurRate));
+            return _portfolio.Positions.Sum(position => CalculatePositionBalance(position, usdRate, eurRate));
         }
 
         private static decimal CalculatePositionBalance(Portfolio.Position position, decimal usdRate, decimal eurRate)
         {
             var balance = position.Balance * position.AveragePositionPrice.Value + position.ExpectedYield.Value;
 
-            switch (position.AveragePositionPrice.Currency)
+            return position.AveragePositionPrice.Currency switch
             {
-                case Currency.Usd:
-                    return balance * usdRate;
-                case Currency.Eur:
-                    return balance * eurRate;
-                case Currency.Rub:
-                    return balance;
-                default:
-                    throw new Exception("Wow, you have stocks in unusual currency");
-            }
+                Currency.Usd => balance * usdRate,
+                Currency.Eur => balance * eurRate,
+                Currency.Rub => balance,
+                _ => throw new Exception("Wow, you have stocks in unusual currency")
+            };
         }
 
         private static void CalculateTotalCompoundInterest(IReadOnlyCollection<(decimal sum, int days)> tuples, decimal portfolioFund)
