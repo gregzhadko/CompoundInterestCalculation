@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using System.Xml;
 using Microsoft.Extensions.Configuration;
 using Tinkoff.Trading.OpenApi.Models;
 using Tinkoff.Trading.OpenApi.Network;
@@ -11,11 +8,11 @@ using static Tinkoff.Utils;
 
 namespace Tinkoff
 {
-    class Program
+    internal static class Program
     {
-        private static IConfiguration _configuration;
+        private static IConfiguration? _configuration;
 
-        static async Task Main(string[] args)
+        private static async Task Main()
         {
             _configuration = new ConfigurationBuilder()
                              .AddJsonFile("appsettings.json")

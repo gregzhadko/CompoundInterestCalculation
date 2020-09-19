@@ -11,15 +11,15 @@ namespace Tinkoff
     {
         private readonly DateTime _fromDate;
         private readonly DateTime _toDate;
-        public Dictionary<DateTime, decimal> UsdRates { get; private set; }
-        public Dictionary<DateTime, decimal> EurRates { get; private set; }
+        public Dictionary<DateTime, decimal> UsdRates { get; private set; } = new Dictionary<DateTime, decimal>();
+        public Dictionary<DateTime, decimal> EurRates { get; private set; } = new Dictionary<DateTime, decimal>();
 
         public RatesLoader(DateTime fromDate, DateTime toDate)
         {
             _fromDate = fromDate.Date;
             _toDate = toDate.Date;
         }
-        
+
         public async Task LoadAsync()
         {
             const string usdCode = "R01235";
@@ -37,8 +37,13 @@ namespace Tinkoff
             var xDoc = new XmlDocument();
             xDoc.LoadXml(xml);
 
-            foreach (XmlNode node in xDoc.DocumentElement.ChildNodes)
+            foreach (XmlNode? node in xDoc.DocumentElement.ChildNodes)
             {
+                if (node == null)
+                {
+                    throw new FormatException("The format of response is incorrect");
+                }
+
                 var date = Convert.ToDateTime(node.Attributes["Date"].Value).Date;
                 var rateString = node.ChildNodes.Cast<XmlNode>().First(n => n.Name == "Value").InnerText;
                 var rate = Convert.ToDecimal(rateString.Replace(',', '.'));
