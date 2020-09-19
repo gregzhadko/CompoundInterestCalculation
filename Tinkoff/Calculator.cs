@@ -8,14 +8,14 @@ namespace Tinkoff
 {
     public class Calculator
     {
-        private List<Operation> _operations;
+        private List<MutableOperation> _operations;
         private readonly Portfolio _portfolio;
         private readonly Dictionary<DateTime, decimal> _usdRates;
         private readonly Dictionary<DateTime, decimal> _eurRates;
 
         public Calculator(List<Operation> operations, Portfolio portfolio, Dictionary<DateTime, decimal> usdRates, Dictionary<DateTime, decimal> eurRates)
         {
-            this._operations = operations;
+            _operations = operations.ConvertToMutable().ToList();
             _portfolio = portfolio;
             _usdRates = usdRates;
             _eurRates = eurRates;
@@ -26,8 +26,8 @@ namespace Tinkoff
             var currentBalance = CalculateCurrentBalance();
             WriteLine($"Current Balance:{currentBalance}");
 
-            _operations = FilterAndConvertOperations(_operations);
-            _operations = JoinOperations(_operations);
+            _operations = _operations.FilterByPayInAndPayOut().ConvertToRub(_usdRates, _eurRates).ToList();
+            _operations = JoinOperations(_operations.Select(o => (Operation)o).ToList()).Select(o => (MutableOperation)o).ToList();
             _operations.Reverse();
 
             var j = 0;
@@ -47,8 +47,17 @@ namespace Tinkoff
             tuples.Add((currentSum + _operations[j].Payment, days));
 
             CalculateTotalCompoundInterest(tuples, currentBalance);
+            //WriteOperations(_operations);
         }
-        
+
+        private void WriteOperations(List<Operation> operations)
+        {
+            foreach (var operation in operations)
+            {
+                Console.WriteLine($"{(operation.Payment >= 0 ? " " : "")}{operation.Payment:0.00}\t\t{operation.Date.Date:dd.MM.yyyy}");
+            }
+        }
+
         public decimal CalculateCurrentBalance()
         {
             var usdRate = _usdRates[DateTime.Now.Date];
@@ -74,7 +83,7 @@ namespace Tinkoff
             //var originalFund = tuples.Last().sum;
             //var inaccuracy = (decimal)0.01 * portfolioFund;
             //double yearlyRate = 21.0;
-            double dailyRate = 0.06; //yearlyRate / 365.0;
+            double dailyRate = 0.058; //yearlyRate / 365.0;
             // decimal profit = 0;
             // int i = 0;
             var calculatedFund = CalculateProfit(tuples, dailyRate);
@@ -138,47 +147,6 @@ namespace Tinkoff
 
             optimized.Add(current);
             return optimized;
-        }
-
-        private List<Operation> FilterAndConvertOperations(IList<Operation> operations)
-        {
-            var convertedOperations = new List<Operation>();
-
-            for (var i = 0; i < operations.Count; i++)
-            {
-                if (operations[i].OperationType != ExtendedOperationType.PayIn && operations[i].OperationType != ExtendedOperationType.PayOut)
-                {
-                    continue;
-                }
-
-                switch (operations[i].Currency)
-                {
-                    case Currency.Usd:
-                        operations[i] = (Operation)ConvertOperationToRub((MutableOperation)operations[i], _usdRates);
-                        break;
-                    case Currency.Eur:
-                        operations[i] = (Operation)ConvertOperationToRub((MutableOperation)operations[i], _eurRates);
-                        break;
-                }
-
-                convertedOperations.Add(operations[i]);
-            }
-
-            return convertedOperations;
-        }
-
-        /// <summary>
-        /// Converts operation from the existing currency to RUB based on the currency dictionary
-        /// </summary>
-        /// <param name="operation"></param>
-        /// <param name="dictionary"></param>
-        /// <returns></returns>
-        public static MutableOperation ConvertOperationToRub(MutableOperation operation, IReadOnlyDictionary<DateTime, decimal> dictionary)
-        {
-            var payment = dictionary[operation.Date.Date] * operation.Payment;
-            operation.Currency = Currency.Rub;
-            operation.Payment = payment;
-            return operation;
         }
     }
 }
