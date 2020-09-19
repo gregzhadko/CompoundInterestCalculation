@@ -35,20 +35,20 @@ namespace Tinkoff
             var j = 0;
             decimal currentSum = 0;
             int days;
-            var tuples = new List<(decimal sum, int days)>();
+            var sumByDaysList = new List<SumByDays>();
             while (j < _operations.Count - 1)
             {
                 var sum = currentSum + _operations[j].Payment;
                 days = (_operations[j + 1].Date.Date - _operations[j].Date.Date).Days;
-                tuples.Add((sum, days));
+                sumByDaysList.Add(new SumByDays(sum, days));
                 currentSum = sum;
                 j++;
             }
 
             days = (DateTime.Now.Date - _operations[j].Date.Date).Days;
-            tuples.Add((currentSum + _operations[j].Payment, days));
+            sumByDaysList.Add(new SumByDays(currentSum + _operations[j].Payment, days));
 
-            CalculateTotalCompoundInterest(tuples, currentBalance);
+            CalculateTotalCompoundInterest(sumByDaysList, currentBalance);
             //WriteOperations(_operations);
         }
 
@@ -80,15 +80,15 @@ namespace Tinkoff
             };
         }
 
-        private static void CalculateTotalCompoundInterest(IReadOnlyCollection<(decimal sum, int days)> tuples, decimal portfolioFund)
+        private static void CalculateTotalCompoundInterest(List<SumByDays> sumByDaysList, decimal currentBalance)
         {
             //var originalFund = tuples.Last().sum;
             //var inaccuracy = (decimal)0.01 * portfolioFund;
             //double yearlyRate = 21.0;
-            double dailyRate = 0.058; //yearlyRate / 365.0;
+            double dailyRate = 0.0564; //yearlyRate / 365.0;
             // decimal profit = 0;
             // int i = 0;
-            var calculatedFund = CalculateProfit(tuples, dailyRate);
+            var calculatedFund = CalculateProfit(sumByDaysList, dailyRate);
             WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
             //var calculatedFund = originalFund + profit;
             // while (i < 100 && Math.Abs(portfolioFund - calculatedFund) > inaccuracy)
@@ -109,20 +109,9 @@ namespace Tinkoff
             // }
         }
 
-        private static decimal CalculateProfit(IEnumerable<(decimal sum, int days)> tuples, double dailyRate)
+        private static decimal CalculateProfit(IEnumerable<SumByDays> sumByDaysList, double dailyRate)
         {
-            decimal currentSum = 0;
-            foreach (var (sum, days) in tuples)
-            {
-                currentSum += CalculateProfitByCompoundInterest(sum, days, dailyRate);
-            }
-
-            return currentSum;
-        }
-
-        private static decimal CalculateProfitByCompoundInterest(decimal sum, int days, double rate)
-        {
-            return (sum * (decimal)Math.Pow(1 + rate / 100, days)) - sum;
+            return sumByDaysList.Sum(s => s.ProfitByRate(dailyRate));
         }
     }
 }
