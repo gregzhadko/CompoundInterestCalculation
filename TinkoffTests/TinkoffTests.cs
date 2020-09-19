@@ -73,5 +73,28 @@ namespace TinkoffTests
             var expected = new List<MutableOperation> { operations[0], operations[1], operations[3] };
             CollectionAssert.AreEqual(expected.Select(o => o.Id), actual.Select(o => o.Id));
         }
+
+        [Test]
+        public void JoinOperations_CorrectJoin()
+        {
+            var operations = new List<MutableOperation>
+            {
+                new MutableOperation { Payment = 100, Date = new DateTime(2020, 09, 08), OperationType = ExtendedOperationType.PayIn },
+                new MutableOperation { Payment = 100, Date = new DateTime(2020, 09, 09), OperationType = ExtendedOperationType.PayIn },
+                new MutableOperation { Payment = 10, Date = new DateTime(2020, 09, 09), OperationType = ExtendedOperationType.PayIn },
+                new MutableOperation { Payment = 1000, Date = new DateTime(2020, 09, 09), OperationType = ExtendedOperationType.PayIn },
+                new MutableOperation { Payment = -100, Date = new DateTime(2020, 09, 09), OperationType = ExtendedOperationType.PayOut },
+                new MutableOperation { Payment = 1000, Date = new DateTime(2020, 09, 10), OperationType = ExtendedOperationType.PayIn },
+                new MutableOperation { Payment = -100, Date = new DateTime(2020, 09, 10), OperationType = ExtendedOperationType.PayOut },
+                new MutableOperation { Payment = -100, Date = new DateTime(2020, 09, 11), OperationType = ExtendedOperationType.PayOut },
+            };
+
+            operations = operations.JoinAtTheSameDate();
+            Assert.AreEqual(4, operations.Count);
+            Assert.AreEqual(100, operations[0].Payment);
+            Assert.AreEqual(1010, operations[1].Payment);
+            Assert.AreEqual(900, operations[2].Payment);
+            Assert.AreEqual(-100, operations[3].Payment);
+        }
     }
 }

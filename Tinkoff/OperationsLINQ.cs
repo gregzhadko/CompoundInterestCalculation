@@ -45,5 +45,36 @@ namespace Tinkoff
             operation.Payment = payment;
             return operation;
         }
+        
+        public static List<MutableOperation> JoinAtTheSameDate(this IEnumerable<MutableOperation> input)
+        {
+            var operations = input.ToList();
+            var joined = new List<MutableOperation>();
+
+            var j = 0;
+            var current = operations[0];
+            while (j < operations.Count - 1)
+            {
+                if (operations[j + 1].Date.Date == current.Date.Date)
+                {
+                    current.Payment += operations[j + 1].Payment;
+                    j++;
+                    continue;
+                }
+
+                j++;
+                joined.Add(current);
+                current = operations[j];
+            }
+
+            joined.Add(current);
+            return joined;
+        }
+
+        public static List<MutableOperation> ReverseList(this List<MutableOperation> list)
+        {
+            list.Reverse();
+            return list;
+        }
     }
 }

@@ -26,9 +26,15 @@ namespace Tinkoff
             var currentBalance = CalculateCurrentBalance();
             WriteLine($"Current Balance:{currentBalance}");
 
-            _operations = _operations.FilterByPayInAndPayOut().ConvertToRub(_usdRates, _eurRates).ToList();
-            _operations = JoinOperations(_operations.Select(o => (Operation)o).ToList()).Select(o => (MutableOperation)o).ToList();
+            _operations = _operations
+                          .FilterByPayInAndPayOut()
+                          .ConvertToRub(_usdRates, _eurRates)
+                          .JoinAtTheSameDate()
+                          .ReverseList();
             _operations.Reverse();
+
+            //_operations = JoinOperations(_operations.Select(o => (Operation)o).ToList()).Select(o => (MutableOperation)o).ToList();
+            //_operations.Reverse();
 
             var j = 0;
             decimal currentSum = 0;
@@ -50,13 +56,13 @@ namespace Tinkoff
             //WriteOperations(_operations);
         }
 
-        private void WriteOperations(List<Operation> operations)
-        {
-            foreach (var operation in operations)
-            {
-                Console.WriteLine($"{(operation.Payment >= 0 ? " " : "")}{operation.Payment:0.00}\t\t{operation.Date.Date:dd.MM.yyyy}");
-            }
-        }
+        // private void WriteOperations(List<Operation> operations)
+        // {
+        //     foreach (var operation in operations)
+        //     {
+        //         Console.WriteLine($"{(operation.Payment >= 0 ? " " : "")}{operation.Payment:0.00}\t\t{operation.Date.Date:dd.MM.yyyy}");
+        //     }
+        // }
 
         public decimal CalculateCurrentBalance()
         {
@@ -121,32 +127,6 @@ namespace Tinkoff
         private static decimal CalculateProfitByCompoundInterest(decimal sum, int days, double rate)
         {
             return (sum * (decimal)Math.Pow(1 + rate / 100, days)) - sum;
-        }
-
-        private static List<Operation> JoinOperations(IReadOnlyList<Operation> operations)
-        {
-            var optimized = new List<Operation>();
-
-            var j = 0;
-            var current = operations[0];
-            while (j < operations.Count - 1)
-            {
-                if (operations[j + 1].Date.Date == current.Date.Date)
-                {
-                    var currentPayment = current.Payment + operations[j + 1].Payment;
-                    current = new Operation(current.Id, current.Status, current.Trades, current.Commission, current.Currency, currentPayment, current.Price, current.Quantity, current.Figi, current.InstrumentType, current.IsMarginCall, current.Date,
-                        current.OperationType);
-                    j++;
-                    continue;
-                }
-
-                j++;
-                optimized.Add(current);
-                current = operations[j];
-            }
-
-            optimized.Add(current);
-            return optimized;
         }
     }
 }
