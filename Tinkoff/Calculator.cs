@@ -13,9 +13,9 @@ namespace Tinkoff
         private readonly Dictionary<DateTime, decimal> _usdRates;
         private readonly Dictionary<DateTime, decimal> _eurRates;
 
-        public Calculator(List<Operation> operations, Portfolio portfolio, Dictionary<DateTime, decimal> usdRates, Dictionary<DateTime, decimal> eurRates)
+        public Calculator(List<MutableOperation> operations, Portfolio portfolio, Dictionary<DateTime, decimal> usdRates, Dictionary<DateTime, decimal> eurRates)
         {
-            _operations = operations.ConvertToMutable().ToList();
+            _operations = operations;
             _portfolio = portfolio;
             _usdRates = usdRates;
             _eurRates = eurRates;
@@ -31,10 +31,6 @@ namespace Tinkoff
                           .ConvertToRub(_usdRates, _eurRates)
                           .JoinAtTheSameDate()
                           .ReverseList();
-            _operations.Reverse();
-
-            //_operations = JoinOperations(_operations.Select(o => (Operation)o).ToList()).Select(o => (MutableOperation)o).ToList();
-            //_operations.Reverse();
 
             var j = 0;
             decimal currentSum = 0;

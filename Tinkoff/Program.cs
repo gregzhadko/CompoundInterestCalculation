@@ -23,7 +23,7 @@ namespace Tinkoff
             var context = connection.Context;
 
             WriteLine("Loading the operations");
-            var operations = (await context.OperationsAsync(DateTime.MinValue, DateTime.MaxValue, "")).Where(o => o.Status == OperationStatus.Done).ToList();
+            var operations = (await context.OperationsAsync(DateTime.MinValue, DateTime.MaxValue, "")).Where(o => o.Status == OperationStatus.Done).ConvertToMutable().ToList();
 
             WriteLine("Calculating rates");
             var ratesLoader = new RatesLoader(operations.Last().Date, DateTime.Now);

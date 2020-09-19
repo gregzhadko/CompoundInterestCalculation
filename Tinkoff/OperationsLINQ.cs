@@ -21,14 +21,13 @@ namespace Tinkoff
         {
             return operations.Select(operation =>
             {
-                Dictionary<DateTime, decimal> rates = operation.Currency switch
+                return operation.Currency switch
                 {
-                    Currency.Usd => usdRates,
-                    Currency.Eur => eurRates,
+                    Currency.Rub => operation,
+                    Currency.Usd => operation.ConvertToRub(usdRates),
+                    Currency.Eur => operation.ConvertToRub(eurRates),
                     _ => throw new Exception($"Currency {operation.Currency} is not supported")
                 };
-                
-                return operation.ConvertToRub(rates);
             });
         }
         
