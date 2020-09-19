@@ -80,33 +80,29 @@ namespace Tinkoff
             };
         }
 
-        private static void CalculateTotalCompoundInterest(List<SumByDays> sumByDaysList, decimal currentBalance)
+        private static void CalculateTotalCompoundInterest(IReadOnlyCollection<SumByDays> sumByDaysList, decimal currentBalance)
         {
-            //var originalFund = tuples.Last().sum;
-            //var inaccuracy = (decimal)0.01 * portfolioFund;
-            //double yearlyRate = 21.0;
-            double dailyRate = 0.0564; //yearlyRate / 365.0;
-            // decimal profit = 0;
-            // int i = 0;
-            var calculatedFund = CalculateProfit(sumByDaysList, dailyRate);
-            WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
-            //var calculatedFund = originalFund + profit;
-            // while (i < 100 && Math.Abs(portfolioFund - calculatedFund) > inaccuracy)
-            // {
-            //     if (portfolioFund > calculatedFund)
-            //     {
-            //         dailyRate += 0.0001;
-            //     }
-            //     else
-            //     {
-            //         dailyRate -= 0.0001;
-            //     }
-            //
-            //     profit = CalculateProfit(tuples, profit, dailyRate);
-            //     calculatedFund = originalFund + profit;
-            //     WriteLine($"Calculated balance: {calculatedFund}. Rate: {dailyRate * 366}");
-            //     i++;
-            // }
+            decimal calculatedBalance = 0;
+            const double accuracy = 0.005; //0.5%
+            var inaccuracy = (decimal)accuracy * currentBalance;
+
+            var dailyRate = 0.01; //yearlyRate / 365.0;
+            const double rateStep = 0.001;
+
+            do
+            {
+                if (calculatedBalance > currentBalance)
+                {
+                    dailyRate -= rateStep;
+                }
+                else
+                {
+                    dailyRate += rateStep;
+                }
+                
+                calculatedBalance = CalculateProfit(sumByDaysList, dailyRate);
+                WriteLine($"Calculated balance: {calculatedBalance}. Rate: {dailyRate * 365}");
+            } while (Math.Abs(calculatedBalance - currentBalance) > inaccuracy);
         }
 
         private static decimal CalculateProfit(IEnumerable<SumByDays> sumByDaysList, double dailyRate)
