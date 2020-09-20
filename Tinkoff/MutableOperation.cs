@@ -5,7 +5,7 @@ namespace Tinkoff
 {
     public class MutableOperation
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
         public decimal Payment { get; set; }
         public Currency Currency { get; set; }
 
