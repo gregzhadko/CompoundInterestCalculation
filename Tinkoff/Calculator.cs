@@ -9,14 +9,14 @@ namespace Tinkoff
     public class Calculator
     {
         private List<MutableOperation> _operations;
-        private readonly Portfolio _portfolio;
+        private readonly List<Portfolio.Position> _positions;
         private readonly Dictionary<DateTime, decimal> _usdRates;
         private readonly Dictionary<DateTime, decimal> _eurRates;
 
-        public Calculator(List<MutableOperation> operations, Portfolio portfolio, Dictionary<DateTime, decimal> usdRates, Dictionary<DateTime, decimal> eurRates)
+        public Calculator(List<MutableOperation> operations, List<Portfolio.Position> positions, Dictionary<DateTime, decimal> usdRates, Dictionary<DateTime, decimal> eurRates)
         {
             _operations = operations;
-            _portfolio = portfolio;
+            _positions = positions;
             _usdRates = usdRates;
             _eurRates = eurRates;
         }
@@ -71,7 +71,7 @@ namespace Tinkoff
         {
             var usdRate = _usdRates[DateTime.Now.Date];
             var eurRate = _eurRates[DateTime.Now.Date];
-            return _portfolio.Positions.Sum(position => CalculatePositionBalance(position, usdRate, eurRate));
+            return _positions.Sum(position => CalculatePositionBalance(position, usdRate, eurRate));
         }
 
         private static decimal CalculatePositionBalance(Portfolio.Position position, decimal usdRate, decimal eurRate)

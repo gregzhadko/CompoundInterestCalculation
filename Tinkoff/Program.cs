@@ -32,7 +32,7 @@ namespace Tinkoff
             WriteLine("Downloading portfolio");
             var portfolio = await context.PortfolioAsync();
 
-            var calculator = new Calculator(operations, portfolio, ratesLoader.UsdRates, ratesLoader.EurRates);
+            var calculator = new Calculator(operations, portfolio.Positions, ratesLoader.UsdRates, ratesLoader.EurRates);
             calculator.Calculate();
 
             Console.WriteLine("The End");
