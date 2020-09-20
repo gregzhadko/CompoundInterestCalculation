@@ -9,11 +9,6 @@ namespace TinkoffTests
 {
     public class Tests
     {
-        [SetUp]
-        public void Setup()
-        {
-        }
-
         [Test]
         public void ConvertOperationToRub_ValueExists_True()
         {
@@ -42,20 +37,6 @@ namespace TinkoffTests
             Assert.AreEqual(110600, operations.Sum(o => o.Payment));
             Assert.AreEqual(Currency.Rub, operations[0].Currency);
             Assert.AreEqual(1, operations.Select(o => o.Currency).Distinct().Count());
-        }
-
-        [Test]
-        public void CalculateCurrentBalance_CurrenciesOnlyPositions_Correct()
-        {
-            var positions = new List<Portfolio.Position>
-            {
-                new Portfolio.Position(default, default, default, default, InstrumentType.Stock, 100, default, new MoneyAmount(Currency.Rub, 100), 0, new MoneyAmount(Currency.Rub, 70), null)
-            };
-            var portfolio = new Portfolio(positions);
-            var rates = new Dictionary<DateTime, decimal> { { DateTime.Now.Date, 1 } };
-            var calculator = new Calculator(new List<MutableOperation>(), portfolio, rates, rates);
-            var actual = calculator.CalculateCurrentBalance();
-            Assert.AreEqual(7100, actual);
         }
 
         [Test]
