@@ -342,3 +342,4 @@ healthchecksdb
 # Uploads
 Tawasal.DigestRush.Admin/wwwroot/uploads/
 Tawasal.DigestRush.API/wwwroot/uploads/
+Tinkoff/appsettings.json
