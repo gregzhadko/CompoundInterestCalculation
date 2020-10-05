@@ -90,11 +90,11 @@ namespace Tinkoff
         private static void CalculateTotalCompoundInterest(IReadOnlyCollection<SumByDays> sumByDaysList, decimal currentBalance, decimal sumWithNoProfit)
         {
             decimal calculatedBalance = 0;
-            const double accuracy = 0.001; //0.1%
+            const double accuracy = 0.0005; //0.1%
             var inaccuracy = (decimal)accuracy * currentBalance;
 
             var dailyRate = 0.01; //yearlyRate / 365.0;
-            const double rateStep = 0.001;
+            const double rateStep = 0.0001;
 
             do
             {
