@@ -76,6 +76,12 @@ namespace Tinkoff
 
         private static decimal CalculatePositionBalance(Portfolio.Position position, decimal usdRate, decimal eurRate)
         {
+            //This case can happen when the stock was sold on weekend and the position is still represented in the portfolio, but the average price is null (probably a bug in SDK).
+            if (position.AveragePositionPrice == null)
+            {
+                return 0;
+            }
+
             var balance = position.Balance * position.AveragePositionPrice.Value + position.ExpectedYield.Value;
 
             return position.AveragePositionPrice.Currency switch

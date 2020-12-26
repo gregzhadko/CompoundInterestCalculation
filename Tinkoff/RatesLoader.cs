@@ -37,17 +37,20 @@ namespace Tinkoff
             var xDoc = new XmlDocument();
             xDoc.LoadXml(xml);
 
-            foreach (XmlNode? node in xDoc.DocumentElement.ChildNodes)
+            if (xDoc.DocumentElement?.ChildNodes != null)
             {
-                if (node == null)
+                foreach (XmlNode? node in xDoc.DocumentElement.ChildNodes)
                 {
-                    throw new FormatException("The format of response is incorrect");
-                }
+                    if (node == null)
+                    {
+                        throw new FormatException("The format of response is incorrect");
+                    }
 
-                var date = Convert.ToDateTime(node.Attributes["Date"].Value).Date;
-                var rateString = node.ChildNodes.Cast<XmlNode>().First(n => n.Name == "Value").InnerText;
-                var rate = Convert.ToDecimal(rateString.Replace(',', '.'));
-                result.Add(date, rate);
+                    var date = Convert.ToDateTime(node.Attributes?["Date"].Value).Date;
+                    var rateString = node.ChildNodes.Cast<XmlNode>().First(n => n.Name == "Value").InnerText;
+                    var rate = Convert.ToDecimal(rateString);
+                    result.Add(date, rate);
+                }
             }
 
             var currentDate = _fromDate;
